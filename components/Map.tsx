@@ -1,11 +1,11 @@
+import { icons } from "@/constants";
 import { calculateRegion, generateMarkersFromData } from "@/lib/map";
 import { useDriverStore, useLocationStore } from "@/store";
 import { MarkerData } from "@/types/type";
-import { useEffect, useState } from "react";
-import { icons } from "@/constants";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
-import React from "react";
+
 const drivers = [
   {
     id: "1",
@@ -53,83 +53,69 @@ const drivers = [
   },
 ];
 const Map = () => {
-  const origin = { latitude: 4.081115, longitude: 9.77121 };
-  const destination = { latitude: 37.771707, longitude: -122.4053769 };
   const {
     userLongitude,
     userLatitude,
-    //where user go
     destinationLatitude,
     destinationLongitude,
   } = useLocationStore();
   const { selectedDriver, setDrivers } = useDriverStore();
   const [markers, setMarkers] = useState<MarkerData[]>([]);
+  //La region est un cercle autour de moi avec un rayon specifie a l'interieur
   const region = calculateRegion({
     userLongitude,
     userLatitude,
-    //where user go
     destinationLatitude,
     destinationLongitude,
   });
+
   useEffect(() => {
-    //TODO:REMOVE
-    setDrivers(drivers);
     if (Array.isArray(drivers)) {
-      if (!userLatitude || !userLongitude) return;
+      if (!userLatitude || !userLatitude) return;
       const newMarkers = generateMarkersFromData({
         data: drivers,
         userLatitude,
         userLongitude,
       });
-
-      setMarkers(newMarkers);
     }
-  }, [drivers, userLatitude, userLongitude]);
+  }, [drivers]);
   return (
-    <MapView
-      provider={PROVIDER_DEFAULT}
-      className="w-full h-full rounded-2xl"
-      tintColor="black"
-      mapType="mutedStandard"
-      showsPointsOfInterest={false}
-      initialRegion={region}
-      showsUserLocation={true}
-      userInterfaceStyle="light"
-    >
-      {markers.map((marker, index) => (
-        <Marker
-          key={marker.id}
-          coordinate={{
-            latitude: marker.latitude,
-            longitude: marker.longitude,
-          }}
-          title={marker.title}
-          image={
-            selectedDriver === +marker.id ? icons.selectedMarker : icons.marker
-          }
-        />
-      ))}
-
-      <>
-        <Marker
-          key="destination"
-          coordinate={{
-            latitude: 37.771707,
-            longitude: -122.4053769,
-          }}
-          title="Destination"
-          image={icons.pin}
-        />
-        <MapViewDirections
-          origin={origin}
-          destination={destination}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY!}
-          strokeColor="#0286ff"
-          strokeWidth={2}
-        />
-      </>
-    </MapView>
+    <View style={styles.container}>
+      <MapView
+        showsUserLocation={true} // Affiche la position de l'utilisateur
+        userInterfaceStyle="light"
+        mapType="standard"
+        showsPointsOfInterest={false}
+        initialRegion={region}
+        provider={PROVIDER_DEFAULT}
+        style={styles.map}
+      >
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={{
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }}
+            title={marker.title}
+            image={
+              selectedDriver === marker.id ? icons.selectedMarker : icons.marker
+            }
+          />
+        ))}
+      </MapView>
+    </View>
   );
 };
 
 export default Map;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+});

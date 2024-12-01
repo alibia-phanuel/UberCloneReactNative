@@ -1,9 +1,12 @@
+import GoogleTextInput from "@/components/GoogleTextInput";
+import * as Location from "expo-location";
 import RideCard from "@/components/RideCard";
-import { images } from "@/constants";
+import { icons, images } from "@/constants";
 import { useUser } from "@clerk/clerk-expo";
 import { useAuth } from "@clerk/clerk-expo";
+import Map from "@/components/Map";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+
 import {
   Text,
   View,
@@ -13,14 +16,46 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocationStore } from "@/store";
+import { useEffect, useState } from "react";
 
 const Home = () => {
+  const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const [hasPermissions, setHasPermission] = useState(false);
   const { user } = useUser();
   const { signOut } = useAuth();
+  const loading = true;
+  const handleDestinationPress = () => {};
   const handleSignOut = () => {
     signOut();
     router.replace("/(auth)/sign-in");
   };
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setHasPermission(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+      setUserLocation({
+        // latitude: location.coords?.latitude,
+        // longitude: location.coords?.longitude,
+        latitude: 4.0511,
+        longitude: 9.7679,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+    })();
+  }, []);
+
   const recentRids = [
     {
       ride_id: "1",
@@ -127,6 +162,7 @@ const Home = () => {
       },
     },
   ];
+
   return (
     <SafeAreaView className="bg-general-500">
       <FlatList
@@ -154,6 +190,38 @@ const Home = () => {
               <ActivityIndicator size="small" color="#000" />
             )}
           </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            <View className="flex flex-row items-center justify-between my-5">
+              <Text className="text-2xl font-semibold">
+                {" "}
+                Bienvenue{" "}
+                {user?.firstName ||
+                  user?.emailAddresses[0].emailAddress.split("@")[0]}{" "}
+                🖐
+              </Text>
+              <TouchableOpacity
+                onPress={handleSignOut}
+                className=" justify-center items-center w-10 h-10 rounded"
+              >
+                <Image source={icons.out} className="w-4 h-4" />
+              </TouchableOpacity>
+            </View>
+
+            <>
+              <Text className="text-xl font-JakartaBold mt-5 mb-3">
+                Votre position actuelle
+              </Text>
+              <View className="flex flex-row items-center  h-[300px] bg-transparent">
+                <Map />
+              </View>
+            </>
+
+            <Text className="text-xl font-JakartaBold mt-5 mb-3">
+              Récentes sorties
+            </Text>
+          </>
         )}
       />
     </SafeAreaView>

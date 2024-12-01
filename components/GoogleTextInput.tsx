@@ -1,10 +1,9 @@
 import { GoogleInputProps } from "@/types/type";
-import { View, Image, Text, Pressable } from "react-native";
-import { router } from "expo-router";
-import { icons } from "@/constants";
+import { View, Image, Text } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import React from "react";
-const googlePlacesApiKey = "AIzaSyCQEbNiieAkDN-OE63InaV2S9oyZefSpcg";
+// import { icons } from "@/constants";
+const googlePlacesApiKey = process.env.EXPO_PUBLIC_PLACES_API_KEY;
 const GoogleTextInput = ({
   icon,
   initialLocation,
@@ -14,23 +13,12 @@ const GoogleTextInput = ({
 }: GoogleInputProps) => {
   return (
     <View
-      className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
+      className={`flex flex-row bg-red-500 items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
     >
       <GooglePlacesAutocomplete
         fetchDetails={true}
         placeholder="Search"
         debounce={200}
-        onPress={(data, details = null) => {
-          handlePress({
-            latitude: details?.geometry.location.lat!,
-            longitude: details?.geometry.location.lng!,
-            address: data.description,
-          });
-        }}
-        query={{
-          key: googlePlacesApiKey,
-          language: "en",
-        }}
         styles={{
           textInputContainer: {
             alignItems: "center",
@@ -62,25 +50,10 @@ const GoogleTextInput = ({
             zIndex: 99,
           },
         }}
-        textInputProps={{
-          placeholderTextColor: "gray",
-          placeholder: initialLocation ?? "Where do you want to go?",
+        query={{
+          key: googlePlacesApiKey,
+          language: "fr", // ou "en", selon vos préférences
         }}
-        renderLeftButton={() => (
-          <Pressable
-            onPress={() => {
-              router.push("/(root)/find-ride");
-            }}
-          >
-            <View className="justify-center items-center w-6 h-6">
-              <Image
-                source={icon ? icon : icons.search}
-                className="w-6 h-6"
-                resizeMode="contain"
-              />
-            </View>
-          </Pressable>
-        )}
       />
     </View>
   );
